@@ -28,7 +28,7 @@ setup(
 
 		# The PyPi documentation is a painful mess
 		# So I'm not even bothering, luarocks wins
-		# by on a land slide with it's simplicity.
+		# it by a land slide with it's simplicity.
 
 		#,"Intended Audience :: Accessibility"
 		#,"Operating System :: Linux :: Linux"
