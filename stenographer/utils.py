@@ -129,11 +129,8 @@ class ResultWriter:
 				print("The hell am I running on?")
 				raise NotImplementedError
 
-		try:
-			with open(output_path, "w", encoding="utf-8") as f:
-				self.write_result(result, file=f, options=options, **kwargs)
-		except Exception as e:
-			print(e)
+		with open(output_path, "w", encoding="utf-8") as f:
+			self.write_result(result, file=f, options=options, **kwargs)
 
 	def write_result(
 		self, result: dict, file: TextIO, options: Optional[dict] = None, **kwargs
@@ -293,7 +290,7 @@ class WriteSRT(SubtitlesWriter):
 			self.iterate_result(result, options, **kwargs), start=1
 		):
 			print(f"{i}\n{start} --> {end}\n{text}\n", file=file, flush=True)
-			print(file)
+			
 
 
 class WriteTSV(ResultWriter):

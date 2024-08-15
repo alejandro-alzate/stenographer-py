@@ -18,8 +18,8 @@ default_model_type = "medium"
 
 default_word_options = {
 	"highlight_words": True,
-	"max_line_count": 20,
-	"max_line_width": 3
+	"max_line_count": 2,
+	"max_line_width": 20
 }
 
 def load_audio(path: str) -> list:
@@ -31,6 +31,7 @@ def load_audio(path: str) -> list:
 		audio = whisper.pad_or_trim(whisper.load_audio(path)) if trim_audio else whisper.load_audio(path)
 	else:
 		print(f"\tThis is not a file: {path}")
+	print("\tDone.")
 	return audio
 
 def load_model(model_type: str = default_model_type):
