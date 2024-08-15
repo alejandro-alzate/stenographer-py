@@ -27,4 +27,3 @@ It'll generate a `.srt` file on the same folder where the media is located, with
 `/home/mint/Videos/cool vid.mp4` → `/home/mint/Videos/cool vid.en.srt`
 
 Here's an example:
- 	![image](https://github.com/alejandro-alzate/srt-lua/assets/57909935/6f5318d8-b724-4e70-998a-e6330f870f5d)
