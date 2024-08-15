@@ -109,7 +109,7 @@ def write_result(customPath: str = os.path.dirname(filename or "./"), wordOption
 		proceed_flag = True
 
 	if proceed_flag:
-		print(f"\t--> {srt_file}")
+		print(f"\t--> {srt_filename}")
 		# Modified writers now only care about an absolute path
 		srt_writer = get_writer("srt")
 		srt_writer(result, srt_filename, wordOptions)
