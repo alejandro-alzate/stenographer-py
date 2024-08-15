@@ -27,5 +27,6 @@ It'll generate a `.srt` file on the same folder where the media is located, with
 `/home/mint/Videos/cool vid.mp4` → `/home/mint/Videos/cool vid.en.srt`
 
 Here's an example:
+(Forgive the quality it is 8.1MB out of the 10MB github allows, there's audio if you want to turn it on)
 <video src="https://github.com/user-attachments/assets/60023607-3d5e-4af7-8eed-556bbb945a7d">
 
