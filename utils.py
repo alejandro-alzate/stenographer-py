@@ -324,7 +324,10 @@ def get_writer(
 	}
 
 	if output_format == "all":
-		all_writers = [writer(output_dir) for writer in writers.values()]
+		# Disabled this is handled in transcriber.py
+		# This is a reversible change.
+		# all_writers = [writer(output_dir) for writer in writers.values()]
+		all_writers = [writer() for writer in writers.values()]
 
 		def write_all(
 			result: dict, file: TextIO, options: Optional[dict] = None, **kwargs
@@ -334,4 +337,7 @@ def get_writer(
 
 		return write_all
 
-	return writers[output_format](output_dir)
+	# Disabled this is handled in transcriber.py
+	# This is a reversible change.
+	#return writers[output_format](output_dir)
+	return writers[output_format]()
