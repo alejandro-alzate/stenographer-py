@@ -1,12 +1,16 @@
 import whisper
 import os
-from whisper.utils import get_writer
+#from whisper.utils import get_writer
+from utils import get_writer
 #from typing import Optional, Union
+
+from codes import LANGUAGES
 
 lang = False
 audio = False
 model = False
 result = False
+verbose = False
 filename = False
 overwrite = False
 trim_audio = False
@@ -51,7 +55,7 @@ def detect_language() -> str:
 	_, probs = model.detect_language(mel)
 	lang = max(probs, key=probs.get)
 
-	print(f"\tDetected language code: {lang}")
+	print(f"\tDetected language: {LANGUAGES[lang]}")
 	return lang
 
 def transcribe():
@@ -70,10 +74,14 @@ def transcribe():
 		return
 
 	print(f"JOB: Language transcription in {lang}")
-	result = model.transcribe(audio, language=lang, fp16=False, verbose=True)
+	result = model.transcribe(audio, language=lang, fp16=False, verbose=verbose)
 
-def write_result(customPath: str = "./", wordOptions: dict = default_word_options) -> bool:
+def write_result(customPath: str = os.path.dirname(filename or "./"), wordOptions: dict = default_word_options) -> bool:
 	print("JOB: Write results.")
+
+	if type(filename) == type(False):
+		print("\tFirst load the audio.")
+		return
 
 	if type(result) == type(False):
 		print("\tFirst transcribe the audio.")
@@ -86,6 +94,7 @@ def write_result(customPath: str = "./", wordOptions: dict = default_word_option
 	name, ext = os.path.splitext(filename)
 	srt_path = customPath
 	srt_name = f"{name}.{lang}.srt"
+	srt_file = f"{srt_path}{srt_name}"
 
 	proceed_flag = False
 	if os.path.isfile(srt_path + srt_name):
@@ -100,9 +109,10 @@ def write_result(customPath: str = "./", wordOptions: dict = default_word_option
 		proceed_flag = True
 
 	if proceed_flag:
-		print("--> {srt_path}{srt_name}")
-		srt_writer = get_writer("srt", srt_path)
-		srt_writer(result, srt_name, wordOptions)
+		print(f"\t--> {srt_file}")
+		# Modified writers now only care about an absolute path
+		srt_writer = get_writer("srt")
+		srt_writer(result, srt_file, wordOptions)
 
 	return proceed_flag
 
