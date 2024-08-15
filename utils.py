@@ -23,6 +23,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+import platform
+import subprocess
 import json
 import os
 import re
@@ -112,11 +114,26 @@ class ResultWriter:
 		# output_path = os.path.join(
 		# 	self.output_dir, audio_basename + "." + self.extension
 		# )
-		output_path = audio_path
+		output_path = audio_path[1:] if audio_path[0] == "." else audio_path
 
-		print(f"Writing to {output_path}")
-		with open(output_path, "w", encoding="utf-8") as f:
-			self.write_result(result, file=f, options=options, **kwargs)
+		#print(f"Writing to {output_path}")
+		if not os.path.isdir(os.path.split(output_path)[0]):
+			print("Target directory seems missing")
+			if platform.system() == "Linux":
+				subprocess.run(["touch", output_path])
+			elif platform.system() == "Darwin":
+				subprocess.run(["touch", output_path])
+			elif platform.system() == "Windows":
+				subprocess.run(f"echo "" > {output_path}")
+			else:
+				print("The hell am I running on?")
+				raise NotImplementedError
+
+		try:
+			with open(output_path, "w", encoding="utf-8") as f:
+				self.write_result(result, file=f, options=options, **kwargs)
+		except Exception as e:
+			print(e)
 
 	def write_result(
 		self, result: dict, file: TextIO, options: Optional[dict] = None, **kwargs

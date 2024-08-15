@@ -73,7 +73,7 @@ def transcribe():
 		print("\tFirst load the model.")
 		return
 
-	print(f"JOB: Language transcription in {lang}")
+	print(f"JOB: Language transcription in {LANGUAGES[lang]}")
 	result = model.transcribe(audio, language=lang, fp16=False, verbose=verbose)
 
 def write_result(customPath: str = os.path.dirname(filename or "./"), wordOptions: dict = default_word_options) -> bool:
