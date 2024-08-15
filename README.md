@@ -1,0 +1,30 @@
+# *Stenographer.py*
+A somewhat automatized tool for video transcriptions using the power of ollama and whisper.
+
+## To do:
+- [ ] Ollama translator
+- [ ] Improve arguments
+- [ ] Allow in-code import
+
+## Features
+- Simplicity (This is a trend on my repos)
+- Mostly system agnostic
+- Can be invoked from terminal
+
+## Flaws
+- Concerning programming choices
+- Coded by a python noob
+
+## Getting started
+1. 📡 Get a copy of srt.lua from the [Official Repository](https://github.com/alejandro-alzate/stenographer.py) or [From PyPi](https://pypi.org/project/whisper-stenographer/)(if you wanna a debian move on you)
+2. 💾 Grab the stenographer folder and put it on your project.
+3. ⚙ Use it to your project like this
+	```bash
+	python3 stenographer /path/to/media/content.mp4
+	```
+4. 💎 Profit.
+It'll generate a `.srt` file on the same folder where the media is located, with the language appended.
+`/home/mint/Videos/cool vid.mp4` → `/home/mint/Videos/cool vid.en.srt`
+
+Here's an example:
+ 	![image](https://github.com/alejandro-alzate/srt-lua/assets/57909935/6f5318d8-b724-4e70-998a-e6330f870f5d)
