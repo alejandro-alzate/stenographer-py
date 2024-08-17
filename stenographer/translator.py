@@ -13,21 +13,24 @@ flag_language = "es"
 #I won't bother stopping people though is mostly a safeguard if an AI
 #matter is on the text.
 
-PROMPT_TEMPLATE = """Translate the content between `[[START OF CONTENT]]` and `[[END OF CONTENT]]` into the specified target language, making sure to preserve the SRT format exactly.
+PROMPT_TEMPLATE = """Translate the content between on the code block into the specified target language, making sure to preserve the SRT format exactly.
 
 **Instructions:**
-1. **Extract** the text between the `[[START OF CONTENT]]` and `[[END OF CONTENT]]` tags.
-2. **Translate** this text into the target language.
+1. **Extract** the text on the code block.
+2. **Translate** the text of the code block into the target language.
 3. **Preserve** the SRT format, including time codes and caption numbering.
-4. **Do not** include the content tags or any additional sentences not even comments.
-5. **Only** respond with the text.
+4. **Do not** include the any additional comments about the task.
+5. **Only** respond with the text on the code block.
 6. **Apply** the following censorship: {censor}.
+7. Respond **only** on plain text (Do not use a code block as response).
+
+Being unable to follow the rules with lead to a permanent ban.
 
 Target language: {language}
 
-[[START OF CONTENT]]
+```
 {content}
-[[END OF CONTENT]]
+```
 """
 
 def check_model():
@@ -65,7 +68,7 @@ def translate(path):
 			srt_data = f.read()
 
 	prompt = PROMPT_TEMPLATE.format(
-		censor = "Censor any swear word with `[ ___ ]`." if flag_censor_words else "Do not censor any swear word.",
+		censor = "Censor any swear word with `[ ___ ]`." if flag_censor_words else "Do not censor any swear",
 		language = LANGUAGES[flag_language] if flag_language in LANGUAGES else flag_language,
 		content = srt_data 
 		)
@@ -76,7 +79,12 @@ def translate(path):
 
 	download_model()
 	#print(srt_name_lang, ext, srt_name, lang, target)
-	print(ollama.generate(model=flag_ollama_model, prompt=prompt)["response"])
+	result = ollama.generate(model=flag_ollama_model, prompt=prompt)
+	response = result["response"]
+	with open(target, "w") as f:
+		print(f"\tWriting to: {target}")
+		f.write(response)
+		f.close()
 
 #print(ollama.pull(flag_ollama_model)["status"])
 #print(type(ollama.pull(flag_ollama_model)))
