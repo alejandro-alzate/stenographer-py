@@ -96,7 +96,8 @@ def translate(path):
 	else:
 		proceed = True
 
-	response = result["response"]
+	#Adding a new line just to be safe in spec.
+	response = result["response"] + "\n"
 	if proceed:
 		with open(target, "w") as f:
 			print(f"\t--> {target}")
