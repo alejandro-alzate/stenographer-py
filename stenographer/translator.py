@@ -6,19 +6,22 @@ import ollama
 #from ollama import AsyncClient
 
 flag_censor_words = False
-flag_ollama_model = "llama2-uncensored"
+flag_ollama_model = "llama3"
 flag_language = "es"
 
 #Probably the ban treat will be enough to avoid prompt injections bugs.
 #I won't bother stopping people though is mostly a safeguard if an AI
 #matter is on the text.
 
-PROMPT_TEMPLATE = """Perform the following tasks:
+PROMPT_TEMPLATE = """Translate the content between `[[START OF CONTENT]]` and `[[END OF CONTENT]]` into the specified target language, making sure to preserve the SRT format exactly.
 
-1. **Extract** and **translate** only the content between the `[[START OF CONTENT]]` and `[[END OF CONTENT]]` tags into the specified target language.
-2. **Preserve** the SRT caption format in your translation.
-3. **Do not** include the content tags or any additional information.
-4. **Apply** the following censorship: {censor}.
+**Instructions:**
+1. **Extract** the text between the `[[START OF CONTENT]]` and `[[END OF CONTENT]]` tags.
+2. **Translate** this text into the target language.
+3. **Preserve** the SRT format, including time codes and caption numbering.
+4. **Do not** include the content tags or any additional sentences not even comments.
+5. **Only** respond with the text.
+6. **Apply** the following censorship: {censor}.
 
 Target language: {language}
 
@@ -39,7 +42,7 @@ def check_model():
 def download_model():
 	try:
 		ollama.chat(flag_ollama_model)
-		print(f"Model {flag_ollama_model} is on the machine downloaded already.")
+		#print(f"Model {flag_ollama_model} is on the machine downloaded already.")
 		return True
 	except ollama.ResponseError as e:
 		print('Error:', e.error)
@@ -71,6 +74,7 @@ def translate(path):
 	srt_name, lang = os.path.splitext(srt_name_lang)
 	target = srt_name + "." + flag_language + "." + ext
 
+	download_model()
 	#print(srt_name_lang, ext, srt_name, lang, target)
 	print(ollama.generate(model=flag_ollama_model, prompt=prompt)["response"])
 
