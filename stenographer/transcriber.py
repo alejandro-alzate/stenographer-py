@@ -121,11 +121,9 @@ def write_result(customPath: str = os.path.dirname(flag_filename or "./"), wordO
 			proceed = False
 	else:
 		proceed = True
-	# just checking id the srt file exists just to be safe.
-	if os.path.isfile(srt_filename) and proceed:
-		write_jobs.append(srt_filename)
 
 	if proceed:
+		write_jobs.append(srt_filename)
 		print(f"\t--> {srt_filename}")
 		# Modified writers now only care about an absolute path
 		srt_writer = get_writer("srt")

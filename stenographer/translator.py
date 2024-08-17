@@ -37,7 +37,7 @@ def check_model():
 	try:
 		ollama.chat(flag_ollama_model)
 	except ollama.ResponseError as e:
-		print("Error: ", e.error)
+		print("\tError: ", e.error)
 		return e
 	else:
 		return True
@@ -48,9 +48,9 @@ def download_model():
 		#print(f"Model {flag_ollama_model} is on the machine downloaded already.")
 		return True
 	except ollama.ResponseError as e:
-		print('Error:', e.error)
+		print("\tError:", e.error)
 		if e.status_code == 404:
-			print(f"Model {flag_ollama_model} is not on the machine downloaded already.")
+			print(f"\tModel {flag_ollama_model} is not on the machine downloaded already.")
 			return ollama.pull(flag_ollama_model)
 		else:
 			return False
@@ -75,17 +75,28 @@ def translate(path):
 
 	srt_name_lang, ext = os.path.splitext(path)
 	srt_name, lang = os.path.splitext(srt_name_lang)
-	target = srt_name + "." + flag_language + "." + ext
+	target = srt_name + "." + flag_language + ext
 
 	download_model()
 	#print(srt_name_lang, ext, srt_name, lang, target)
 	result = ollama.generate(model=flag_ollama_model, prompt=prompt)
-	response = result["response"]
-	with open(target, "w") as f:
-		print(f"\tWriting to: {target}")
-		f.write(response)
-		f.close()
 
-#print(ollama.pull(flag_ollama_model)["status"])
-#print(type(ollama.pull(flag_ollama_model)))
-#print(ollama.ps())
+
+	proceed = False
+	if os.path.isfile(srt_filename):
+		if flag_overwrite:
+			print("\tThis file already exist! Overwriting file as per the translator.flag_overwrite directive.")
+			proceed = True
+
+		else:
+			print("\tThis file already exist! Avoiding overwrite as per the translator.flag_overwrite directive.")
+			proceed = False
+	else:
+		proceed = True
+
+	response = result["response"]
+	if proceed:
+		with open(target, "w") as f:
+			print(f"\t--> {target}")
+			f.write(response)
+			f.close()
