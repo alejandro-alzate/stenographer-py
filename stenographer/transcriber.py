@@ -4,7 +4,7 @@ import os
 from utils import get_writer
 #from typing import Optional, Union
 
-from codes import LANGUAGES
+from values import LANGUAGES
 
 lang = False
 audio = False

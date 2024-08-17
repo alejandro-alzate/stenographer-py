@@ -1,3 +1,33 @@
+#Probably the ban treat will be enough to avoid prompt injections bugs.
+#I won't bother stopping people though is mostly a safeguard if an AI
+#matter is on the text.
+
+PROMPT_TEMPLATE = """Translate the content between on the code block into the specified target language, making sure to preserve the SRT format exactly.
+
+**Instructions:**
+1. **Extract** the text on the code block.
+2. **Translate** the text of the code block into the target language.
+3. **Preserve** the SRT format, including time codes and caption numbering.
+4. **Do not** include the any additional comments about the task.
+5. **Only** respond with the text on the code block.
+6. **Apply** the following censorship: {censor}.
+7. Respond **only** on plain text (Do not use a code block as response).
+
+Being unable to follow the rules with lead to a permanent ban.
+
+Target language: {language}
+
+```
+{content}
+```
+"""
+
+DUMMY_SRT = """1
+00:00:00,000 --> 00:00:01,000
+
+
+"""
+
 LANGUAGES = {
 	"en": "english",
 	"zh": "chinese",
