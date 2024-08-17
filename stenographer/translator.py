@@ -56,11 +56,13 @@ def download_model():
 			return False
 
 def load_model():
+	print("JOB: Load / Check / Download model.")
 	if not check_model():
 		download_model()
+	print("Done.\n")
 
 def translate(path):
-	print("JOB: Translate")
+	print("JOB: Translate.")
 
 	srt_data = "<EMPTY CONTENT>"
 	if os.path.isfile(path):
@@ -100,3 +102,4 @@ def translate(path):
 			print(f"\t--> {target}")
 			f.write(response)
 			f.close()
+	print("\n")

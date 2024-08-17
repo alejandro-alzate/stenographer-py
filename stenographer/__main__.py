@@ -31,7 +31,15 @@ flag_overwrite = args.overwrite == "True"
 
 flag_whisper_model = args.whisper_model
 flag_ollama_model = args.ollama_model
-# print(args)
+if flag_verbose:
+	print("Called with the following flags:\n")
+	#This is what in lua would be a for k, v loop
+	#Python "magic" as sublime likes to call it
+	#Sure is something...
+	for k in args.__dict__:
+		v = args.__dict__[k]
+		print(f"\t{k} = {v}")
+	print("\n\n\n")
 
 transcriber.flag_verbose = flag_verbose
 transcriber.flag_filename = flag_filename
@@ -41,6 +49,7 @@ transcriber.all()
 
 translator.flag_verbose = flag_verbose
 translator.flag_overwrite = flag_overwrite
+translator.flag_ollama_model = flag_ollama_model
 for path in transcriber.write_jobs:
 	translator.translate(path)
 
