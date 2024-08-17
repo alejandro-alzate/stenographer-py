@@ -85,7 +85,7 @@ def translate(path):
 
 
 	proceed = False
-	if os.path.isfile(srt_filename):
+	if os.path.isfile(target):
 		if flag_overwrite:
 			print("\tThis file already exist! Overwriting file as per the translator.flag_overwrite directive.")
 			proceed = True

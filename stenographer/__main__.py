@@ -39,7 +39,7 @@ if flag_verbose:
 	for k in args.__dict__:
 		v = args.__dict__[k]
 		print(f"\t{k} = {v}")
-	print("\n\n\n")
+	print("\n")
 
 transcriber.flag_verbose = flag_verbose
 transcriber.flag_filename = flag_filename
