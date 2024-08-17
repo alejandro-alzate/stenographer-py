@@ -22,6 +22,11 @@ Target language: {language}
 ```
 """
 
+#This is the amount of memory where the job dispatch process for translation will stop
+#This is an obligatory tweak on window because of course they have to with that bloat
+MEMORY_THRESHOLD = 70
+
+
 #########################################
 # Do not touch zone						#
 #########################################

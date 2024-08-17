@@ -5,7 +5,11 @@ DESCRIPTION = "Stenographer.py - a transcription tool for your content."
 LONG_DESCRIPTION = "Stenographer.py is a somewhat automatized tool for videos and audio transcriptions using the power of ollama and whisper"
 AUTHOR = "Alejandro Alzate Sánchez"
 AUTHOR_EMAIL = "alejandro-alzate@github.com"
-DEPENDENCIES = ["whisper", "ollama"]
+DEPENDENCIES = [
+	"whisper", "ollama", "psutil", "os", "asyncio",
+	"json", "platform", "subprocess", "re", "sys",
+	"zlib"
+	]
 
 setup(
 	#God dammit stenographer is taken

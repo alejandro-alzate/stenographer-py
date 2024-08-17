@@ -60,7 +60,7 @@ def detect_language() -> str:
 	_, probs = model.detect_language(mel)
 	lang = max(probs, key=probs.get)
 
-	print(f"\tDetected language: {LANGUAGES[lang] if lang in LANGUAGES else lang}.")
+	print(f"\tDetected language: {LANGUAGES[lang] if lang in LANGUAGES else lang}.\n")
 	return lang
 
 def transcribe():
@@ -79,9 +79,7 @@ def transcribe():
 		return
 
 	print(f"[Transcriber] JOB: Language transcription in {LANGUAGES[lang] if lang in LANGUAGES else lang}")
-	print("\n")
 	result = model.transcribe(audio, language=lang, fp16=flag_fp16, verbose=flag_verbose)
-	print("\n")
 
 def write_result(customPath: str = os.path.dirname(flag_filename or "./"), wordOptions: dict = default_word_options) -> bool:
 	print("[Transcriber] JOB: Write results.")
