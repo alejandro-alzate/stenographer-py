@@ -36,16 +36,16 @@ def download_model():
 			return False
 
 def load_model():
-	print("JOB: Load / Check / Download model.")
+	print("[Translator] JOB: Load / Check / Download model.")
 	if not check_model():
 		download_model()
-	print("Done.\n")
+	print("\tDone.\n")
 
-def prepare_prompt():
+def prepare_prompt(srt_data):
 	prompt = PROMPT_TEMPLATE.format(
 		censor = "Censor any swear word with `[ ___ ]`." if flag_censor_words else "Do not censor any swear",
 		language = LANGUAGES[flag_language] if flag_language in LANGUAGES else flag_language,
-		content = srt_data 
+		content = srt_data
 		)
 	return prompt
 
@@ -79,18 +79,25 @@ def overwrite_check(target: str) -> bool:
 	return proceed
 
 def translate(path: str):
-	print(f"JOB: Translate to {LANGUAGES[l]}.")
+	print(f"[Translator] JOB: Translate to {LANGUAGES[flag_language] if flag_language in LANGUAGES else flag_language}.")
 	download_model()
 
-	srt_data = read_srt_content(path)
-	prompt = prepare_prompt()
 	target = get_target_path(path)
+	srt_data = read_srt_content(path)
+	prompt = prepare_prompt(srt_data)
 
-	#print(srt_name_lang, ext, srt_name, lang, target)
-	result = ollama.generate(model=flag_ollama_model, prompt=prompt)
+	result = ollama.generate(stream=True, model=flag_ollama_model, prompt=prompt)
+
+	#New: streamed output
+	#To do: streamed writing
+	response = ""
+	for chunk in response:
+		content = chunk["message"]["content"]
+		print(content, end="", flush=True)
+		response = response + content
 
 	#Adding a new line just to be safe in spec.
-	response = result["response"] + "\n"
+	response = response + "\n\n"
 
 	if overwrite_check(target):
 		with open(target, "w") as f:

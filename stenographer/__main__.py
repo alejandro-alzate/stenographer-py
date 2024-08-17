@@ -38,7 +38,7 @@ flag_translation_list = json.loads(args.translation_list)
 flag_whisper_model = args.whisper_model
 flag_ollama_model = args.ollama_model
 if flag_verbose:
-	print("Called with the following flags:")
+	print("[Main] INFO: Called with the following flags:")
 	#This is what in lua would be a for k, v loop
 	#Python "magic" as sublime likes to call it
 	#Sure is something...
@@ -46,6 +46,7 @@ if flag_verbose:
 		v = args.__dict__[k]
 		print(f"\t{k} = {v}")
 	print()
+
 def transcribe():
 	transcriber.flag_verbose = flag_verbose
 	transcriber.flag_filename = flag_filename
@@ -60,11 +61,12 @@ def translate():
 	for path in transcriber.write_jobs:
 		if isinstance(flag_translation_list, list):
 			for l in flag_translation_list:
+				#print(l)
 				if l != transcriber.lang:
 					translator.flag_language = l
 					translator.translate(path)
 				else:
-					print(f"Skipping translation on {LANGUAGES[l]}, This is the detected source language.")
+					print(f"[Main] INFO: Skipping translation on {LANGUAGES[l]}, This is the detected source language.")
 		elif isinstance(flag_translation_list, str):
 			translator.flag_language = l
 			translator.translate(path)
@@ -73,4 +75,4 @@ transcribe()
 translate()
 
 end = time.time()
-print(f"[Finished in {end - start}]")
+print(f"[Main] INFO: [Finished in {end - start}]")

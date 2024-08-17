@@ -28,7 +28,7 @@ default_word_options = {
 
 def load_audio() -> list:
 	global audio
-	print("JOB: Load audio.")
+	print("[Transcriber] JOB: Load audio.")
 	if os.path.isfile(flag_filename):
 		audio = whisper.load_audio(flag_filename)
 	else:
@@ -37,7 +37,7 @@ def load_audio() -> list:
 	return audio
 
 def load_model():
-	print(f"JOB: Load model.")
+	print(f"[Transcriber] JOB: Load model.")
 	global model
 	model = whisper.load_model(flag_whisper_model)
 	print("\tDone.\n")
@@ -45,7 +45,7 @@ def load_model():
 
 def detect_language() -> str:
 	global lang
-	print(f"JOB: Detect language.")
+	print(f"[Transcriber] JOB: Detect language.")
 
 	if type(audio) == type(False):
 		print("\tFirst load the audio.")
@@ -60,8 +60,7 @@ def detect_language() -> str:
 	_, probs = model.detect_language(mel)
 	lang = max(probs, key=probs.get)
 
-	print(f"\tDetected language: {LANGUAGES[lang]}")
-	print("\n")
+	print(f"\tDetected language: {LANGUAGES[lang] if lang in LANGUAGES else lang}.")
 	return lang
 
 def transcribe():
@@ -79,13 +78,13 @@ def transcribe():
 		print("\tFirst load the model.")
 		return
 
-	print(f"JOB: Language transcription in {LANGUAGES[lang]}")
+	print(f"[Transcriber] JOB: Language transcription in {LANGUAGES[lang] if lang in LANGUAGES else lang}")
 	print("\n")
 	result = model.transcribe(audio, language=lang, fp16=flag_fp16, verbose=flag_verbose)
 	print("\n")
 
 def write_result(customPath: str = os.path.dirname(flag_filename or "./"), wordOptions: dict = default_word_options) -> bool:
-	print("JOB: Write results.")
+	print("[Transcriber] JOB: Write results.")
 
 	if type(flag_filename) == type(False):
 		print("\tFirst load the audio.")
@@ -121,7 +120,6 @@ def write_result(customPath: str = os.path.dirname(flag_filename or "./"), wordO
 		# Modified writers now only care about an absolute path
 		srt_writer = get_writer("srt")
 		srt_writer(result, srt_filename, wordOptions)
-	print("\n")
 	return srt_filename
 
 def all():

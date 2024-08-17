@@ -22,6 +22,15 @@ Target language: {language}
 ```
 """
 
+#########################################
+# Do not touch zone						#
+#########################################
+# Below values are not for user tweaks	#
+#										#
+# They're constants more than anything	#
+# else...								#
+#########################################
+
 DUMMY_SRT = """1
 00:00:00,000 --> 00:00:01,000
 
