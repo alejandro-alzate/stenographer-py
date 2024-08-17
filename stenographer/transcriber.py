@@ -10,10 +10,14 @@ lang = False
 audio = False
 model = False
 result = False
-verbose = False
-filename = False
-overwrite = False
-trim_audio = False
+
+flag_fp16 = False
+flag_verbose = False
+flag_filename = False
+flag_overwrite = False
+flag_whisper_model = "medium"
+
+write_jobs = []
 default_model_type = "medium"
 
 default_word_options = {
@@ -22,21 +26,19 @@ default_word_options = {
 	"max_line_width": 20
 }
 
-def load_audio(path: str) -> list:
+def load_audio() -> list:
 	global audio
-	global filename
-	filename = path
 	print("JOB: Load audio.")
-	if os.path.isfile(path):
-		audio = whisper.pad_or_trim(whisper.load_audio(path)) if trim_audio else whisper.load_audio(path)
+	if os.path.isfile(flag_filename):
+		audio = whisper.load_audio(flag_filename)
 	else:
-		print(f"\tThis is not a file: {path}")
+		print(f"\tThis is not a file: {flag_filename}")
 	print("\tDone.")
 	return audio
 
-def load_model(model_type: str = default_model_type):
+def load_model():
 	global model
-	model = whisper.load_model(model_type)
+	model = whisper.load_model(flag_whisper_model)
 	return model
 
 def detect_language() -> str:
@@ -52,7 +54,7 @@ def detect_language() -> str:
 		return
 
 	mel = whisper.log_mel_spectrogram(whisper.pad_or_trim(audio)).to(model.device)
-	options = whisper.DecodingOptions(fp16=False)
+	options = whisper.DecodingOptions(fp16=flag_fp16)
 	_, probs = model.detect_language(mel)
 	lang = max(probs, key=probs.get)
 
@@ -75,12 +77,12 @@ def transcribe():
 		return
 
 	print(f"JOB: Language transcription in {LANGUAGES[lang]}")
-	result = model.transcribe(audio, language=lang, fp16=False, verbose=verbose)
+	result = model.transcribe(audio, language=lang, fp16=flag_fp16, verbose=flag_verbose)
 
-def write_result(customPath: str = os.path.dirname(filename or "./"), wordOptions: dict = default_word_options) -> bool:
+def write_result(customPath: str = os.path.dirname(flag_filename or "./"), wordOptions: dict = default_word_options) -> bool:
 	print("JOB: Write results.")
 
-	if type(filename) == type(False):
+	if type(flag_filename) == type(False):
 		print("\tFirst load the audio.")
 		return
 
@@ -92,34 +94,48 @@ def write_result(customPath: str = os.path.dirname(filename or "./"), wordOption
 		print("\tFirst detect language.")
 		return
 
-	name, ext = os.path.splitext(filename)
-	srt_path = customPath
+	name, ext = os.path.splitext(flag_filename)
 	srt_name = f"{name}.{lang}.srt"
-	srt_filename = f"{srt_path}{srt_name}"
+	srt_filename = f"{srt_name}"
+	# dbg = {
+	# 	"name": name,
+	# 	"ext": ext,
+	# 	"flag_filename": flag_filename,
+	# 	"srt_path": srt_path,
+	# 	"customPath": customPath,
+	# 	"srt_name": srt_name,
+	# 	"name": name,
+	# 	"lang": lang,
+	# 	"srt_filename": srt_filename,
+	# }
+	# print(dbg)
 
-	proceed_flag = False
-	if os.path.isfile(srt_path + srt_name):
-		if overwrite:
-			print("\tThis file already exist! Overwriting file as per the transcriber.overwrite directive.")
-			proceed_flag = True
+	proceed = False
+	if os.path.isfile(srt_filename):
+		if flag_overwrite:
+			print("\tThis file already exist! Overwriting file as per the transcriber.flag_overwrite directive.")
+			proceed = True
 
 		else:
-			print("\tThis file already exist! Avoiding overwrite as per the transcriber.overwrite directive.")
-			proceed_flag = False
+			print("\tThis file already exist! Avoiding overwrite as per the transcriber.flag_overwrite directive.")
+			proceed = False
 	else:
-		proceed_flag = True
+		proceed = True
+	# just checking id the srt file exists just to be safe.
+	if os.path.isfile(srt_filename) and proceed:
+		write_jobs.append(srt_filename)
 
-	if proceed_flag:
+	if proceed:
 		print(f"\t--> {srt_filename}")
 		# Modified writers now only care about an absolute path
 		srt_writer = get_writer("srt")
 		srt_writer(result, srt_filename, wordOptions)
 
-	return proceed_flag
+	return srt_filename
 
-def all(audioPath: str, modelType: str = default_model_type, customPath: str = "./", customWordOptions: dict = default_word_options):
-	load_audio(audioPath)
-	load_model(modelType)
+def all():
+	load_audio()
+	load_model()
 	detect_language()
 	transcribe()
-	write_result(customPath, customWordOptions)
+	write_result()

@@ -114,7 +114,9 @@ class ResultWriter:
 		# output_path = os.path.join(
 		# 	self.output_dir, audio_basename + "." + self.extension
 		# )
-		output_path = audio_path[1:] if audio_path[0] == "." else audio_path
+		output_path = audio_path
+		#Removed I fixed the actual source of the bug
+		#output_path = audio_path[1:] if audio_path[0] == "." else audio_path
 
 		#print(f"Writing to {output_path}")
 		if not os.path.isdir(os.path.split(output_path)[0]):
