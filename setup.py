@@ -8,7 +8,7 @@ AUTHOR_EMAIL = "alejandro-alzate@github.com"
 DEPENDENCIES = [
 	"whisper", "ollama", "psutil", "os", "asyncio",
 	"json", "platform", "subprocess", "re", "sys",
-	"zlib"
+	"zlib", "aiofiles", "gc"#, "colorama"
 	]
 
 setup(

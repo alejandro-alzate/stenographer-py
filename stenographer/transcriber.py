@@ -1,9 +1,8 @@
 import whisper
 import os
+import gc
 #from whisper.utils import get_writer
 from utils import get_writer
-#from typing import Optional, Union
-
 from values import LANGUAGES
 
 lang = False
@@ -28,7 +27,7 @@ default_word_options = {
 
 def load_audio() -> list:
 	global audio
-	print("[Transcriber] JOB: Load audio.")
+	print("[\033[3;35mTranscriber\033[0;0m] JOB: Load audio.")
 	if os.path.isfile(flag_filename):
 		audio = whisper.load_audio(flag_filename)
 	else:
@@ -37,7 +36,7 @@ def load_audio() -> list:
 	return audio
 
 def load_model():
-	print(f"[Transcriber] JOB: Load model.")
+	print(f"[\033[3;35mTranscriber\033[0;0m] JOB: Load model.")
 	global model
 	model = whisper.load_model(flag_whisper_model)
 	print("\tDone.\n")
@@ -45,7 +44,7 @@ def load_model():
 
 def detect_language() -> str:
 	global lang
-	print(f"[Transcriber] JOB: Detect language.")
+	print(f"[\033[3;35mTranscriber\033[0;0m] JOB: Detect language.")
 
 	if type(audio) == type(False):
 		print("\tFirst load the audio.")
@@ -78,11 +77,11 @@ def transcribe():
 		print("\tFirst load the model.")
 		return
 
-	print(f"[Transcriber] JOB: Language transcription in {LANGUAGES[lang] if lang in LANGUAGES else lang}")
+	print(f"[\033[3;35mTranscriber\033[0;0m] JOB: Language transcription in {LANGUAGES[lang] if lang in LANGUAGES else lang}")
 	result = model.transcribe(audio, language=lang, fp16=flag_fp16, verbose=flag_verbose)
 
 def write_result(customPath: str = os.path.dirname(flag_filename or "./"), wordOptions: dict = default_word_options) -> bool:
-	print("[Transcriber] JOB: Write results.")
+	print("[\033[3;35mTranscriber\033[0;0m] JOB: Write results.")
 
 	if type(flag_filename) == type(False):
 		print("\tFirst load the audio.")
@@ -120,9 +119,34 @@ def write_result(customPath: str = os.path.dirname(flag_filename or "./"), wordO
 		srt_writer(result, srt_filename, wordOptions)
 	return srt_filename
 
+def shutdown():
+	#Clean the garbage it's not fun coming back to a unattended PC an see it at ~95% of RAM
+	print("[\033[3;35mTranscriber\033[0;0m] JOB: \"De-allocate\" memory.")
+	global model
+	global audio
+	global lang
+	global result
+
+	#Whenever possible nuke objects from the poor abused RAM
+	del lang
+	del audio
+	del model
+	del result
+
+	#Reinitialize variables as they started to begin with
+	lang = False
+	audio = False
+	model = False
+	result = False
+
+	#Explicitly yell at the collector to get rid of this mess
+	gc.collect()
+
+
 def all():
 	load_audio()
 	load_model()
 	detect_language()
 	transcribe()
 	write_result()
+	shutdown()
