@@ -1,19 +1,17 @@
-from values import LANGUAGES
-from values import PROMPT_TEMPLATE
-from values import DUMMY_SRT
+from values import LANGUAGES, PROMPT_TEMPLATE, DUMMY_SRT
 import os
-import ollama
-
+import aiofiles
 import asyncio
+import ollama
 from ollama import AsyncClient
 
-flag_language = "es"
+flag_verbose = False
 flag_overwrite = True
-flag_ollama_stream = True
 flag_censor_words = False
 flag_ollama_model = "llama3"
-flag_ollama_async = False
+flag_ollama_= False
 flag_ollama_stream = True
+flag_ollama_async = True
 
 
 def check_model():
@@ -42,16 +40,16 @@ def download_model():
 
 def load_model():
 	#Load or download the model as needed.
-	print("[Translator] JOB: Load / Check / Download model.")
+	print("[\033[3;34mTranslator\033[0;0m] JOB: Load / Check / Download model.")
 	if not check_model():
 		download_model()
 	print("\tDone.\n")
 
-def prepare_prompt(srt_data):
+def prepare_prompt(srt_data, language: str):
 	#Prepare the prompt with given SRT data and flags.
 	prompt = PROMPT_TEMPLATE.format(
 		censor = "Censor any swear word with `[ ___ ]`." if flag_censor_words else "Do not censor any swear",
-		language = LANGUAGES.get(flag_language, flag_language),
+		language = LANGUAGES.get(language, language),
 		content = srt_data
 		)
 	return prompt
@@ -61,16 +59,18 @@ def read_srt_content(path: str) -> str:
 	srt_data = DUMMY_SRT
 	if os.path.isfile(path):
 		with open(path, "r") as f:
-			srt_data = f.read()
+			temp = f.read()
+			srt_data = ""
+			srt_data = temp
 	else:
 		print(f"There's no such file {path}")
 	return srt_data
 
-def get_target_path(path: str) -> str:
+def get_target_path(path: str, language: str) -> str:
 	#Generate the target file path based on the original file path and language.
 	srt_name_lang, ext = os.path.splitext(path)
 	srt_name, lang = os.path.splitext(srt_name_lang)
-	target = srt_name + "." + flag_language + ext
+	target = srt_name + "." + language + ext
 	return target
 
 def overwrite_check(target: str) -> bool:
@@ -79,6 +79,7 @@ def overwrite_check(target: str) -> bool:
 	if os.path.isfile(target):
 		if flag_overwrite:
 			print("\tThis file already exist! Overwriting file as per the translator.flag_overwrite directive.")
+			print(f"\t--> {target}")
 			proceed = True
 
 		else:
@@ -88,11 +89,47 @@ def overwrite_check(target: str) -> bool:
 		proceed = True
 	return proceed
 
-def static_write(result, target):
+def async_static_write(target, prompt):
+	#Write static (non-streamed) content to the file.
+	result = AsyncClient().generate(stream=False, model=flag_ollama_model, prompt=prompt)
+	if flag_verbose:
+		print(result)
+		print(result["message"]["content"])
+
+	#Adding a new line just to be safe in spec.
+	response = result["message"]["content"] + "\n\n"
+	with aiofiles.open(target, "w") as f:
+		print(f"\t--> {target}")
+		f.write(response)
+	print("\n")
+
+def async_streamed_write(target, prompt):
+	#Write streamed content to the file as it's given.
+	with aiofiles.open(target, "w") as f:
+		for chunk in AsyncClient().generate(stream=True, model=flag_ollama_model, prompt=prompt):
+			content = chunk["message"]["content"]
+			if flag_verbose:
+				print(content, end="", flush=True)
+			f.write(content)
+			f.flush()
+
+		#Adding a new line just to be safe in spec.
+		print(f"\t--> {target}")
+		f.write("\n")
+		f.flush()
+
+def static_write(target, prompt):
 	#Write static (non-streamed) content to the file.
 	#Adding a new line just to be safe in spec.
+	result = ollama.generate(stream=False, model=flag_ollama_model, prompt=prompt)
+	content = ""
+	try:
+		content = result["message"]["content"]
+	except Exception as e:
+		print(e)
+
 	if flag_verbose:
-		print(result["message"]["content"])
+		print()
 
 	response = result["message"]["content"] + "\n\n"
 	with open(target, "w") as f:
@@ -100,11 +137,16 @@ def static_write(result, target):
 		f.write(response)
 	print("\n")
 
-def streamed_write(result, target):
+def streamed_write(target, prompt):
+	result = ollama.generate(stream=True, model=flag_ollama_model, prompt=prompt)
 	#Write streamed content to the file as it's given.
 	with open(target, "w") as f:
 		for chunk in result:
-			content = chunk["message"]["content"]
+			content = ""
+			print(chunk)
+			if chunk["message"]:
+				if chunk["message"]["content"]:
+					content = chunk["message"]["content"]
 			if flag_verbose:
 				print(content, end="", flush=True)
 			f.write(content)
@@ -114,21 +156,30 @@ def streamed_write(result, target):
 		f.write("\n\n")
 		f.flush()
 
-
-def translate(path: str):
+def translate(path: str, language: str):
 	#Main function to handle the translation process based on the specified mode.
-	print(f"[Translator] JOB: Translate to {LANGUAGES.get(flag_language, flag_language)}.")
+	print(f"[\033[3;34mTranslator\033[0;0m] JOB: Translate to {LANGUAGES.get(language, language)}.")
 	download_model()
 
-	target = get_target_path(path)
+	target = get_target_path(path, language)
 	srt_data = read_srt_content(path)
-	prompt = prepare_prompt(srt_data)
+	prompt = prepare_prompt(srt_data, language)
 
 	if overwrite_check(target):
-		result = ollama.generate(stream=flag_ollama_stream, model=flag_ollama_model, prompt=prompt)
-		if flag_ollama_stream:
-			streamed_write(result, target)
+		if flag_ollama_async:
+			if flag_ollama_stream:
+				if flag_verbose: print("async_streamed_write")
+				async_streamed_write(target, prompt)
+			else:
+				if flag_verbose: print("async_static_write")
+				async_static_write(target, prompt)
 		else:
-			static_write(result, target)
+			if flag_ollama_stream:
+				if flag_verbose: print("streamed_write")
+				streamed_write(target, prompt)
+			else:
+				if flag_verbose: print("static_write")
+				static_write(target, prompt)
+				
 	else:
 		print("\nTranslation not performed due to overwrite restriction.\n")

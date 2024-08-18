@@ -5,6 +5,7 @@ A somewhat automatized tool for video transcriptions using the power of ollama a
 - [ ] Ollama translator
 - [ ] Improve arguments
 - [ ] Allow in-code import
+- [ ] Asynchronous run
 
 ## Features
 - Simplicity (This is a trend on my repos)

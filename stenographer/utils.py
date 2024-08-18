@@ -1,3 +1,104 @@
+import os
+import platform
+import psutil
+import asyncio
+from values import MEMORY_THRESHOLD, INCLUDE_SWAP_MEMORY
+
+def set_own_process_priority(priority):
+	if platform.system() == "Windows":
+		PRIORITY_CLASSES = {
+			'IDLE': psutil.IDLE_PRIORITY_CLASS,
+			'BELOW_NORMAL': psutil.BELOW_NORMAL_PRIORITY_CLASS,
+			'NORMAL': psutil.NORMAL_PRIORITY_CLASS,
+			'ABOVE_NORMAL': psutil.ABOVE_NORMAL_PRIORITY_CLASS,
+			'HIGH': psutil.HIGH_PRIORITY_CLASS,
+			'REALTIME': psutil.REALTIME_PRIORITY_CLASS
+		}
+	else:
+		PRIORITY_CLASSES = {
+			'IDLE': psutil.IOPRIO_CLASS_IDLE,
+			'BELOW_NORMAL': psutil.IOPRIO_CLASS_BE,
+			'NORMAL': psutil.IOPRIO_CLASS_NONE,
+			'REALTIME': psutil.IOPRIO_CLASS_RT
+			}
+
+	if priority not in PRIORITY_CLASSES:
+		raise ValueError(f"Invalid priority level. Choose from: {', '.join(PRIORITY_CLASSES.keys())}")
+
+	p = psutil.Process(os.getpid())
+	p.nice(PRIORITY_CLASSES[priority])
+
+def set_priority_of_process_and_descendants(pid, priority):
+	def set_priority(p):
+		try:
+			p.nice(priority)
+		except psutil.AccessDenied:
+			print(f"Access denied when setting priority for PID {p.pid}")
+
+	def process_tree(p):
+		# Recursively set priority for the process tree
+		children = p.children(recursive=True)
+		set_priority(p)
+		for child in children:
+			set_priority(child)
+	
+	# Define priority levels
+	PRIORITY_CLASSES = {
+		'IDLE': psutil.IDLE_PRIORITY_CLASS,
+		'BELOW_NORMAL': psutil.BELOW_NORMAL_PRIORITY_CLASS,
+		'NORMAL': psutil.NORMAL_PRIORITY_CLASS,
+		'ABOVE_NORMAL': psutil.ABOVE_NORMAL_PRIORITY_CLASS,
+		'HIGH': psutil.HIGH_PRIORITY_CLASS,
+		'REALTIME': psutil.REALTIME_PRIORITY_CLASS
+	}
+	
+	if priority not in PRIORITY_CLASSES:
+		raise ValueError(f"Invalid priority level. Choose from: {', '.join(PRIORITY_CLASSES.keys())}")
+
+	try:
+		p = psutil.Process(pid)
+		process_tree(p)
+	except psutil.NoSuchProcess:
+		print(f"No process found with PID {pid}")
+
+async def get_memory_percentages():
+	# Get virtual memory details (physical RAM and swap)
+	virtual_memory = psutil.virtual_memory()
+	swap_memory = psutil.swap_memory()
+
+	# Calculate physical memory percentages
+	total_physical = virtual_memory.total
+	used_physical = virtual_memory.used
+	percent_physical_used = (used_physical / total_physical) * 100
+
+	# Calculate swap memory percentages
+	total_swap = swap_memory.total
+	used_swap = swap_memory.used
+	percent_swap_used = (used_swap / total_swap) * 100
+
+	# Calculate combined memory usage
+	total_memory = total_physical + total_swap
+	used_memory = used_physical + used_swap
+	percent_combined_used = (used_memory / total_memory) * 100
+
+	return percent_physical_used, percent_swap_used, percent_combined_used
+
+async def is_memory_under_threshold():
+	#Check if the memory usage is below the defined threshold.
+	physical, swap, combined = await get_memory_percentages()
+	if INCLUDE_SWAP_MEMORY:
+		return combined < MEMORY_THRESHOLD
+	else:
+		return physical < MEMORY_THRESHOLD
+
+async def memory_check():
+	while not await is_memory_under_threshold():
+		m = MEMORY_THRESHOLD
+		p, s, c = await get_memory_percentages()
+		print("[Utils] INFO: Memory usage is high (Threshold: {:.1f}%, Physical: {:.1f}%, Swap: {:.1f}%, Total: {:.1f}%), waiting to dispatch more jobs.".format(m, p, s, c), end="\r")
+		await asyncio.sleep(5)
+
+
 #Taken from whisper.utils modified file routines
 """
 MIT License

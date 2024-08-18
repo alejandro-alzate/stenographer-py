@@ -1,13 +1,10 @@
 import time
 import json
 import os
-#start = time.time()
-from values import LANGUAGES
-from values import MEMORY_THRESHOLD
-import transcriber
-import translator
-import argparse
 import asyncio
+import argparse
+from utils import set_own_process_priority, memory_check, get_memory_percentages
+from values import LANGUAGES, MEMORY_THRESHOLD, INCLUDE_SWAP_MEMORY
 
 args = {}
 
@@ -35,8 +32,8 @@ parser.add_argument("-wm", "--whisper-model", default=flag_whisper_model, help="
 
 #Translator
 parser.add_argument("-om", "--ollama-model", default=flag_ollama_model, help="Model to use during the transcription process.")
-parser.add_argument("-os", "--ollama-stream", default="True" if flag_ollama_stream else "False", help="Stream the ollama output on translation.")
 parser.add_argument("-tl", "--translation-list", default=json.dumps(flag_translation_list), help="A JSON list (eg: \'[\"es \"]\') containing languages for translation.")
+parser.add_argument("-os", "--ollama-stream", default="True" if flag_ollama_stream else "False", help="Stream the ollama output on translation.")
 parser.add_argument("-oa", "--ollama-async", default="True" if flag_ollama_async else "False", help="Make ollama operations asychronous.")
 
 args = parser.parse_args()
@@ -53,8 +50,10 @@ flag_ollama_async = args.ollama_async == "True"
 flag_ollama_stream = args.ollama_stream == "True"
 flag_translation_list = json.loads(args.translation_list)
 
+set_own_process_priority("BELOW_NORMAL")
+
 if flag_verbose:
-	print("[Main] INFO: Called with the following flags:")
+	print("[\x1b[3;32mMain\x1b[0;0m] \x1b[3;34;0mINFO\x1b[0;0m: Called with the following flags:")
 	#This is what in lua would be a for k, v loop
 	#Python "magic" as sublime likes to call it
 	#Sure is something...
@@ -63,7 +62,12 @@ if flag_verbose:
 		print(f"\t{k} = {v}")
 	print()
 
-async def async_translate_path(path, languages):
+#They slow down the boot process moved to here to at least
+#Give instant feedback that the command is running
+import transcriber
+import translator
+
+async def async_translate(path, language):
 	#Asynchronously handle translation for a given path and list of languages.
 
 	#Prepare flags
@@ -71,17 +75,12 @@ async def async_translate_path(path, languages):
 	translator.flag_overwrite = flag_overwrite
 	translator.flag_ollama_model = flag_ollama_model
 	translator.flag_ollama_stream = flag_ollama_stream
+	translator.flag_ollama_async = flag_ollama_async
 
-	for l in languages:
-		if l != transcriber.lang:
-			translator.flag_language = l
-			await asyncio.to_thread(translator.translate, path)
-		else:
-			print(f"[Main] INFO: Skipping translation on {LANGUAGES[l]}, This is the detected source language.")
-
-def is_memory_under_threshold():
-	#Check if the memory usage is below the defined threshold.
-	return psutil.virtual_memory().percent < MEMORY_THRESHOLD
+	if language != transcriber.lang:
+		await translator.translate(path, language)
+	else:
+		print(f"[\x1b[3;32mMain\x1b[0;0m] \x1b[3;34;0mINFO\x1b[0;0m: Skipping translation on {LANGUAGES.get(language, language)}, This is the detected source language.")
 
 async def main():
 	#Main function to execute translations asynchronously with concurrent job dispatching.
@@ -94,9 +93,33 @@ async def main():
 	transcriber.all()
 
 	paths = transcriber.write_jobs
-	
+
 	#If cannot detect the core count is assumed to be 1
 	core_count = os.cpu_count() or 1
+	tasks = []
+
+	for path in paths:
+		if isinstance(flag_translation_list, list):
+			for language in flag_translation_list:
+				if language != transcriber.lang:
+					await memory_check()
+					print(f"\tAdding asychronous translate task: {language} -> {path}")
+					tasks.append(async_translate(path, language))
+		elif isinstance(flag_translation_list, str):
+			await memory_check()
+			print(f"\tAdding asychronous translate task: {language} -> {path}")
+			tasks.append(async_translate(path, language))
+
+		if len(tasks) >= core_count:
+			await asyncio.gather(*tasks)
+			tasks = []
+
+	if tasks:
+		try:
+			await asyncio.gather(*tasks)
+		except Exception as e:
+			print(f"Error: {e}")
+
 
 	# if isinstance(flag_translation_list, list):
 	# 	#Create a batches of jobs based on the core count
@@ -118,7 +141,7 @@ if __name__ == "__main__":
 	start = time.time()
 	asyncio.run(main())
 	end = time.time()
-	print(f"[Main] INFO: [Finished in {end - start}]")
+	print(f"[\x1b[3;32mMain\x1b[0;0m] \x1b[3;34;0mINFO\x1b[0;0m: [Finished in {end - start}]")
 
 # def transcribe():
 # 	transcriber.flag_verbose = flag_verbose
@@ -140,7 +163,7 @@ if __name__ == "__main__":
 # 					translator.flag_language = l
 # 					translator.translate(path)
 # 				else:
-# 					print(f"[Main] INFO: Skipping translation on {LANGUAGES[l]}, This is the detected source language.")
+# 					print(f"[\x1b[3;32mMain\x1b[0;0m] \x1b[3;34;0mINFO\x1b[0;0m: Skipping translation on {LANGUAGES[l]}, This is the detected source language.")
 # 		elif isinstance(flag_translation_list, str):
 # 			translator.flag_language = l
 # 			translator.translate(path)
@@ -149,4 +172,4 @@ if __name__ == "__main__":
 # translate()
 
 # end = time.time()
-# print(f"[Main] INFO: [Finished in {end - start}]")
+# print(f"[\x1b[3;32mMain\x1b[0;0m] \x1b[3;34;0mINFO\x1b[0;0m: [Finished in {end - start}]")
