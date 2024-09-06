@@ -1,3 +1,15 @@
+#As for now you can pick only between es and en
+#If one string is missing the program may chrash
+#I don't have the fallback behavior of language.lua
+#here so be careful.
+app_lang = "es"
+app_fallback_lang = "en"
+default_word_options = {
+	"highlight_words": True,
+	"max_line_count": 2,
+	"max_line_width": 20
+}
+
 #Probably the ban treat will be enough to avoid prompt injections bugs.
 #I won't bother stopping people though is mostly a safeguard if an AI
 #matter is on the text.

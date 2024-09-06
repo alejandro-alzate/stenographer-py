@@ -1,4 +1,5 @@
 import time
+start = time.time()
 import json
 import os
 import asyncio
@@ -67,109 +68,109 @@ if flag_verbose:
 import transcriber
 import translator
 
-async def async_translate(path, language):
-	#Asynchronously handle translation for a given path and list of languages.
+# async def async_translate(path, language):
+# 	#Asynchronously handle translation for a given path and list of languages.
 
-	#Prepare flags
-	translator.flag_verbose = flag_verbose
-	translator.flag_overwrite = flag_overwrite
-	translator.flag_ollama_model = flag_ollama_model
-	translator.flag_ollama_stream = flag_ollama_stream
-	translator.flag_ollama_async = flag_ollama_async
-
-	if language != transcriber.lang:
-		await translator.translate(path, language)
-	else:
-		print(f"[\x1b[3;32mMain\x1b[0;0m] \x1b[3;34;0mINFO\x1b[0;0m: Skipping translation on {LANGUAGES.get(language, language)}, This is the detected source language.")
-
-async def main():
-	#Main function to execute translations asynchronously with concurrent job dispatching.
-	transcriber.flag_verbose = flag_verbose
-	transcriber.flag_filename = flag_filename
-	transcriber.flag_overwrite = flag_overwrite
-	transcriber.flag_whisper_model = flag_whisper_model
-
-	#The transcription is a dependency for translation.
-	transcriber.all()
-
-	paths = transcriber.write_jobs
-
-	#If cannot detect the core count is assumed to be 1
-	core_count = os.cpu_count() or 1
-	tasks = []
-
-	for path in paths:
-		if isinstance(flag_translation_list, list):
-			for language in flag_translation_list:
-				if language != transcriber.lang:
-					await memory_check()
-					print(f"\tAdding asychronous translate task: {language} -> {path}")
-					tasks.append(async_translate(path, language))
-		elif isinstance(flag_translation_list, str):
-			await memory_check()
-			print(f"\tAdding asychronous translate task: {language} -> {path}")
-			tasks.append(async_translate(path, language))
-
-		if len(tasks) >= core_count:
-			await asyncio.gather(*tasks)
-			tasks = []
-
-	if tasks:
-		try:
-			await asyncio.gather(*tasks)
-		except Exception as e:
-			print(f"Error: {e}")
-
-
-	# if isinstance(flag_translation_list, list):
-	# 	#Create a batches of jobs based on the core count
-	# 	batches = [paths[i:i + core_count] for i in range(0, len(paths), core_count)]
-
-	# 	#Use asyncio.gather to run jobs concurrently
-	# 	tasks = []
-	# 	for batch in batches:
-	# 		for path in batch:
-	# 			tasks.append(async_translate_path(path, flag_translation_list))
-
-	# 	await asyncio.gather(*tasks)
-	# elif isinstance(flag_translation_list, str):
-	# 	#handle the single translation case
-	# 	tasks = [async_translate_path(path, [flag_translation_list]) for path in paths]
-	# 	await asyncio.gather(*tasks)
-
-if __name__ == "__main__":
-	start = time.time()
-	asyncio.run(main())
-	end = time.time()
-	print(f"[\x1b[3;32mMain\x1b[0;0m] \x1b[3;34;0mINFO\x1b[0;0m: [Finished in {end - start}]")
-
-# def transcribe():
-# 	transcriber.flag_verbose = flag_verbose
-# 	transcriber.flag_filename = flag_filename
-# 	transcriber.flag_overwrite = flag_overwrite
-# 	transcriber.flag_whisper_model = flag_whisper_model
-# 	transcriber.all()
-
-# def translate():
+# 	#Prepare flags
 # 	translator.flag_verbose = flag_verbose
 # 	translator.flag_overwrite = flag_overwrite
 # 	translator.flag_ollama_model = flag_ollama_model
 # 	translator.flag_ollama_stream = flag_ollama_stream
-# 	for path in transcriber.write_jobs:
+# 	translator.flag_ollama_async = flag_ollama_async
+
+# 	if language != transcriber.lang:
+# 		await translator.translate(path, language)
+# 	else:
+# 		print(f"[\x1b[3;32mMain\x1b[0;0m] \x1b[3;34;0mINFO\x1b[0;0m: Skipping translation on {LANGUAGES.get(language, language)}, This is the detected source language.")
+
+# async def main():
+# 	#Main function to execute translations asynchronously with concurrent job dispatching.
+# 	transcriber.flag_verbose = flag_verbose
+# 	transcriber.flag_filename = flag_filename
+# 	transcriber.flag_overwrite = flag_overwrite
+# 	transcriber.flag_whisper_model = flag_whisper_model
+
+# 	#The transcription is a dependency for translation.
+# 	transcriber.all()
+
+# 	paths = transcriber.write_jobs
+
+# 	#If cannot detect the core count is assumed to be 1
+# 	core_count = os.cpu_count() or 1
+# 	tasks = []
+
+# 	for path in paths:
 # 		if isinstance(flag_translation_list, list):
-# 			for l in flag_translation_list:
-# 				#print(l)
-# 				if l != transcriber.lang:
-# 					translator.flag_language = l
-# 					translator.translate(path)
-# 				else:
-# 					print(f"[\x1b[3;32mMain\x1b[0;0m] \x1b[3;34;0mINFO\x1b[0;0m: Skipping translation on {LANGUAGES[l]}, This is the detected source language.")
+# 			for language in flag_translation_list:
+# 				if language != transcriber.lang:
+# 					await memory_check()
+# 					print(f"\tAdding asychronous translate task: {language} -> {path}")
+# 					tasks.append(async_translate(path, language))
 # 		elif isinstance(flag_translation_list, str):
-# 			translator.flag_language = l
-# 			translator.translate(path)
+# 			await memory_check()
+# 			print(f"\tAdding asychronous translate task: {language} -> {path}")
+# 			tasks.append(async_translate(path, language))
 
-# transcribe()
-# translate()
+# 		if len(tasks) >= core_count:
+# 			await asyncio.gather(*tasks)
+# 			tasks = []
 
-# end = time.time()
-# print(f"[\x1b[3;32mMain\x1b[0;0m] \x1b[3;34;0mINFO\x1b[0;0m: [Finished in {end - start}]")
+# 	if tasks:
+# 		try:
+# 			await asyncio.gather(*tasks)
+# 		except Exception as e:
+# 			print(f"Error: {e}")
+
+
+# 	# if isinstance(flag_translation_list, list):
+# 	# 	#Create a batches of jobs based on the core count
+# 	# 	batches = [paths[i:i + core_count] for i in range(0, len(paths), core_count)]
+
+# 	# 	#Use asyncio.gather to run jobs concurrently
+# 	# 	tasks = []
+# 	# 	for batch in batches:
+# 	# 		for path in batch:
+# 	# 			tasks.append(async_translate_path(path, flag_translation_list))
+
+# 	# 	await asyncio.gather(*tasks)
+# 	# elif isinstance(flag_translation_list, str):
+# 	# 	#handle the single translation case
+# 	# 	tasks = [async_translate_path(path, [flag_translation_list]) for path in paths]
+# 	# 	await asyncio.gather(*tasks)
+
+# if __name__ == "__main__":
+# 	start = time.time()
+# 	#asyncio.run(main())
+# 	end = time.time()
+# 	print(f"[\x1b[3;32mMain\x1b[0;0m] \x1b[3;34;0mINFO\x1b[0;0m: [Finished in {end - start}]")
+
+def transcribe():
+	transcriber.flag_verbose = flag_verbose
+	transcriber.flag_filename = flag_filename
+	transcriber.flag_overwrite = flag_overwrite
+	transcriber.flag_whisper_model = flag_whisper_model
+	transcriber.all()
+
+def translate():
+	translator.flag_verbose = flag_verbose
+	translator.flag_overwrite = flag_overwrite
+	translator.flag_ollama_model = flag_ollama_model
+	translator.flag_ollama_stream = flag_ollama_stream
+	for path in transcriber.write_jobs:
+		if isinstance(flag_translation_list, list):
+			for l in flag_translation_list:
+				#print(l)
+				if l != transcriber.lang:
+					translator.flag_language = l
+					translator.translate(path)
+				else:
+					print(f"[\x1b[3;32mMain\x1b[0;0m] \x1b[3;34;0mINFO\x1b[0;0m: Skipping translation on {LANGUAGES[l]}, This is the detected source language.")
+		elif isinstance(flag_translation_list, str):
+			translator.flag_language = l
+			translator.translate(path)
+
+transcribe()
+translate()
+
+end = time.time()
+print(f"[\x1b[3;32mMain\x1b[0;0m] \x1b[3;34;0mINFO\x1b[0;0m: [Finished in {end - start}]")

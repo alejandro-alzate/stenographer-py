@@ -1,9 +1,9 @@
 import whisper
 import os
 import gc
-#from whisper.utils import get_writer
 from utils import get_writer
-from values import LANGUAGES
+from values import LANGUAGES, default_word_options
+from stringsTranscriber import get_message
 
 lang = False
 audio = False
@@ -15,28 +15,24 @@ flag_verbose = False
 flag_filename = False
 flag_overwrite = False
 flag_whisper_model = "medium"
+flag_language = "en"  # Default language
 
 write_jobs = []
 default_model_type = "medium"
 
-default_word_options = {
-	"highlight_words": True,
-	"max_line_count": 2,
-	"max_line_width": 20
-}
-
 def load_audio() -> list:
 	global audio
-	print("[\033[3;35mTranscriber\033[0;0m] JOB: Load audio.")
+	print(get_message(flag_language, "load_audio"))
 	if os.path.isfile(flag_filename):
 		audio = whisper.load_audio(flag_filename)
 	else:
-		print(f"\tThis is not a file: {flag_filename}")
+		print(get_message(flag_language, "file_not_found", filename=flag_filename))
+		raise SystemError("File not found.")
 	print("\tDone.\n")
 	return audio
 
 def load_model():
-	print(f"[\033[3;35mTranscriber\033[0;0m] JOB: Load model.")
+	print(get_message(flag_language, "load_model"))
 	global model
 	model = whisper.load_model(flag_whisper_model)
 	print("\tDone.\n")
@@ -44,14 +40,14 @@ def load_model():
 
 def detect_language() -> str:
 	global lang
-	print(f"[\033[3;35mTranscriber\033[0;0m] JOB: Detect language.")
+	print(get_message(flag_language, "detect_language"))
 
-	if type(audio) == type(False):
-		print("\tFirst load the audio.")
+	if not isinstance(audio, list):
+		print(get_message(flag_language, "first_load_audio"))
 		return
 
-	if type(model) == type(False):
-		print("\tFirst load the model.")
+	if not isinstance(model, whisper.Model):
+		print(get_message(flag_language, "first_load_model"))
 		return
 
 	mel = whisper.log_mel_spectrogram(whisper.pad_or_trim(audio)).to(model.device)
@@ -59,40 +55,39 @@ def detect_language() -> str:
 	_, probs = model.detect_language(mel)
 	lang = max(probs, key=probs.get)
 
-	print(f"\tDetected language: {LANGUAGES[lang] if lang in LANGUAGES else lang}.\n")
+	print(f"\tDetected language: {LANGUAGES.get(lang, lang)}.\n")
 	return lang
 
 def transcribe():
 	global result
-	if type(audio) == type(False):
-		print("\tFirst load the audio.")
-		print(audio)
+	if not isinstance(audio, list):
+		print(get_message(flag_language, "first_load_audio"))
 		return
 
-	if type(lang) == type(False):
-		print("\tFirst detect language.")
+	if not isinstance(lang, str):
+		print(get_message(flag_language, "first_detect_language"))
 		return
 
-	if type(model) == type(False):
-		print("\tFirst load the model.")
+	if not isinstance(model, whisper.Model):
+		print(get_message(flag_language, "first_load_model"))
 		return
 
-	print(f"[\033[3;35mTranscriber\033[0;0m] JOB: Language transcription in {LANGUAGES[lang] if lang in LANGUAGES else lang}")
+	print(get_message(flag_language, "transcription_job", language=LANGUAGES.get(lang, lang)))
 	result = model.transcribe(audio, language=lang, fp16=flag_fp16, verbose=flag_verbose)
 
 def write_result(customPath: str = os.path.dirname(flag_filename or "./"), wordOptions: dict = default_word_options) -> bool:
-	print("[\033[3;35mTranscriber\033[0;0m] JOB: Write results.")
+	print(get_message(flag_language, "write_results"))
 
-	if type(flag_filename) == type(False):
-		print("\tFirst load the audio.")
+	if not isinstance(flag_filename, str):
+		print(get_message(flag_language, "first_load_audio"))
 		return
 
-	if type(result) == type(False):
-		print("\tFirst transcribe the audio.")
+	if not isinstance(result, dict):
+		print(get_message(flag_language, "transcription_not_done"))
 		return
 
-	if type(lang) == type(False):
-		print("\tFirst detect language.")
+	if not isinstance(lang, str):
+		print(get_message(flag_language, "first_detect_language"))
 		return
 
 	name, ext = os.path.splitext(flag_filename)
@@ -102,11 +97,10 @@ def write_result(customPath: str = os.path.dirname(flag_filename or "./"), wordO
 	proceed = False
 	if os.path.isfile(srt_filename):
 		if flag_overwrite:
-			print("\tThis file already exist! Overwriting file as per the transcriber.flag_overwrite directive.")
+			print(get_message(flag_language, "file_exists_overwrite"))
 			proceed = True
-
 		else:
-			print("\tThis file already exist! Avoiding overwrite as per the transcriber.flag_overwrite directive.")
+			print(get_message(flag_language, "file_exists_avoid_overwrite"))
 			proceed = False
 	else:
 		proceed = True
@@ -114,34 +108,28 @@ def write_result(customPath: str = os.path.dirname(flag_filename or "./"), wordO
 	if proceed:
 		write_jobs.append(srt_filename)
 		print(f"\t--> {srt_filename}")
-		# Modified writers now only care about an absolute path
 		srt_writer = get_writer("srt")
 		srt_writer(result, srt_filename, wordOptions)
 	return srt_filename
 
 def shutdown():
-	#Clean the garbage it's not fun coming back to a unattended PC an see it at ~95% of RAM
-	print("[\033[3;35mTranscriber\033[0;0m] JOB: \"De-allocate\" memory.")
+	print(get_message(flag_language, "shutdown"))
 	global model
 	global audio
 	global lang
 	global result
 
-	#Whenever possible nuke objects from the poor abused RAM
 	del lang
 	del audio
 	del model
 	del result
 
-	#Reinitialize variables as they started to begin with
 	lang = False
 	audio = False
 	model = False
 	result = False
 
-	#Explicitly yell at the collector to get rid of this mess
 	gc.collect()
-
 
 def all():
 	load_audio()
