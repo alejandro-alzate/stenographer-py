@@ -1,4 +1,4 @@
-# string.py
+# string transcriber
 
 MESSAGES = {
 	"en": {
@@ -29,7 +29,7 @@ MESSAGES = {
 		"file_exists_overwrite": "\t¡Este archivo ya existe! Sobrescribiendo el archivo según la directiva transcriber.flag_overwrite.",
 		"file_exists_avoid_overwrite": "\t¡Este archivo ya existe! Evitando sobrescritura según la directiva transcriber.flag_overwrite.",
 		"transcription_not_done": "\tPrimero transcribe el audio.",
-		"shutdown": "[\033[3;35mTranscriptor\033[0;0m] TRABAJO: \"De-allocate\" memoria."
+		"shutdown": "[\033[3;35mTranscriptor\033[0;0m] TRABAJO: \"Liberar\" memoria."
 	}
 }
 
