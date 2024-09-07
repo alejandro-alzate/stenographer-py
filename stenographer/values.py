@@ -55,6 +55,8 @@ DUMMY_SRT = """1
 
 """
 
+PROGRAM_LANGUAGES = ["es", "en"]
+
 LANGUAGES = {
 	"en": "english",
 	"zh": "chinese",

@@ -3,6 +3,16 @@ import platform
 import psutil
 import asyncio
 from values import MEMORY_THRESHOLD, INCLUDE_SWAP_MEMORY
+from values import PROGRAM_LANGUAGES as PL
+import locale
+
+def get_system_language():
+	system_locale = locale.getdefaultlocale()[0]
+	language_code = system_locale.split('_')[0]
+	allowed_languages = PL
+	return language_code if language_code in allowed_languages else "en"
+
+
 
 def set_own_process_priority(priority):
 	if platform.system() == "Windows":

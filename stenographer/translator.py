@@ -11,7 +11,7 @@ flag_ollama_model = "llama3"
 flag_language = "en"
 
 #Download the model if it's not already available.
-def download_model():
+def download_model() -> bool:
 	try:
 		ollama.chat(flag_ollama_model)
 		if flag_verbose:
@@ -27,11 +27,11 @@ def download_model():
 		else:
 			return False
 
-def load_model():
+def load_model() -> None:
 	print(f"[\033[3;34mTranslator\033[0;0m] {get_message(flag_language, 'load_job')}")
 	download_model()
 
-def prepare_prompt(srt_data, language: str):
+def prepare_prompt(srt_data, language: str) -> str:
 	#Prepare the prompt with given SRT data and flags.
 	prompt = PROMPT_TEMPLATE.format(
 		censor = "Censor any swear word with `[ ___ ]`." if flag_censor_words else "Do not censor any swears",
@@ -63,6 +63,8 @@ def get_source_path(path: str) -> str:
 		source = name + ".srt"
 	elif english_source:
 		source = name + ".en.srt"
+	elif ext == ".srt":
+		source = path
 	else:
 		source = False
 		raise SystemError("File not found.")
@@ -91,7 +93,7 @@ def overwrite_check(target: str) -> bool:
 		proceed = True
 	return proceed
 
-def translate(path: str, language: str):
+def translate(path: str, language: str) -> None:
 	#Main function to handle the translation process based on the specified mode.
 	print(get_message(flag_language, 'translate_job', language=LANGUAGES.get(language, language)))
 	download_model()
@@ -105,14 +107,20 @@ def translate(path: str, language: str):
 		result = ollama.generate(
 			model = flag_ollama_model,
 			prompt = prompt,
-			stream = True
+			stream = False
 			)
-		content = ""
-		for chunk in result:
-			#if isinstance(chunk["message"]["content"], str):
-			if flag_verbose:
-				print(chunk['message']['content'], end='', flush=True)
-			content = content + chunk['message']['content']
+
+		#Responses will always get trimmed this is the fix:
+		#								↓
+		content = result["response"] + "\n\n"
+		with open(target, "w") as f:
+			print(f"\t--> {target}")
+			f.write(content)
+
+		if flag_verbose:
+			print(content)
+		print("\n")
+
 
 	else:
 		print("\n" + get_message(flag_language, "translation_not_performed") + "\n")

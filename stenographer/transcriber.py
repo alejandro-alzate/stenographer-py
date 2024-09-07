@@ -1,4 +1,4 @@
-import whisper
+#import whisper
 import os
 import gc
 from utils import get_writer
@@ -9,6 +9,7 @@ lang = False
 audio = False
 model = False
 result = False
+whisper = False
 
 flag_fp16 = False
 flag_verbose = False
@@ -20,10 +21,16 @@ flag_language = "en"  # Default language
 write_jobs = []
 default_model_type = "medium"
 
+def load_whisper():
+	global whisper
+	if (whisper is False) or (whisper is None):
+		import whisper
+
 def load_audio() -> list:
 	global audio
 	print(get_message(flag_language, "load_audio"))
 	if os.path.isfile(flag_filename):
+		load_whisper()
 		audio = whisper.load_audio(flag_filename)
 	else:
 		print(get_message(flag_language, "file_not_found", filename=flag_filename))
@@ -34,6 +41,7 @@ def load_audio() -> list:
 def load_model():
 	print(get_message(flag_language, "load_model"))
 	global model
+	load_whisper()
 	model = whisper.load_model(flag_whisper_model)
 	print("\tDone.\n")
 	return model
@@ -42,33 +50,35 @@ def detect_language() -> str:
 	global lang
 	print(get_message(flag_language, "detect_language"))
 
-	if not isinstance(audio, list):
+	if (audio is False) or (audio is None):
 		print(get_message(flag_language, "first_load_audio"))
 		return
 
-	if not isinstance(model, whisper.Model):
+	if (model is False) or (model is None):
 		print(get_message(flag_language, "first_load_model"))
 		return
 
+	load_whisper()
 	mel = whisper.log_mel_spectrogram(whisper.pad_or_trim(audio)).to(model.device)
 	options = whisper.DecodingOptions(fp16=flag_fp16)
 	_, probs = model.detect_language(mel)
 	lang = max(probs, key=probs.get)
 
-	print(f"\tDetected language: {LANGUAGES.get(lang, lang)}.\n")
+	print(get_message(flag_language, "language_detected", language=LANGUAGES.get(lang, lang)))
 	return lang
 
 def transcribe():
 	global result
-	if not isinstance(audio, list):
+
+	if (audio is False) or (audio is None):
 		print(get_message(flag_language, "first_load_audio"))
 		return
 
-	if not isinstance(lang, str):
+	if (lang is False) or (lang is None):
 		print(get_message(flag_language, "first_detect_language"))
 		return
 
-	if not isinstance(model, whisper.Model):
+	if (model is False) or (model is None):
 		print(get_message(flag_language, "first_load_model"))
 		return
 
@@ -78,15 +88,15 @@ def transcribe():
 def write_result(customPath: str = os.path.dirname(flag_filename or "./"), wordOptions: dict = default_word_options) -> bool:
 	print(get_message(flag_language, "write_results"))
 
-	if not isinstance(flag_filename, str):
+	if (audio is False) or (audio is None):
 		print(get_message(flag_language, "first_load_audio"))
 		return
 
-	if not isinstance(result, dict):
+	if (result is False) or (result is None):
 		print(get_message(flag_language, "transcription_not_done"))
 		return
 
-	if not isinstance(lang, str):
+	if (lang is False) or (lang is None):
 		print(get_message(flag_language, "first_detect_language"))
 		return
 
