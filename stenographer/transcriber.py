@@ -15,7 +15,7 @@ flag_fp16 = False
 flag_verbose = False
 flag_filename = False
 flag_overwrite = False
-flag_whisper_model = "medium"
+flag_whisper_model = "large"
 flag_language = "en"  # Default language
 
 write_jobs = []
