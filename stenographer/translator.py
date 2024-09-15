@@ -123,7 +123,7 @@ def translate(path: str, language: str) -> None:
 
 
 	else:
-		print("\n" + get_message(flag_language, "translation_not_performed") + "\n")
+		print("\n" + get_message(flag_language, "avoid_overwrite") + "\n")
 
 
 
