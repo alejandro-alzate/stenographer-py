@@ -82,7 +82,8 @@ def translate():
 	flag_filename = args.audio
 	if isinstance(flag_translation_list, list):
 		for lang in flag_translation_list:
-			translator.translate(flag_filename, lang)
+			if lang != transcriber.lang:
+				translator.translate(flag_filename, lang)
 
 
 def main():

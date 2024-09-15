@@ -103,6 +103,7 @@ def write_result(customPath: str = os.path.dirname(flag_filename or "./"), wordO
 	name, ext = os.path.splitext(flag_filename)
 	srt_name = f"{name}.{lang}.srt"
 	srt_filename = f"{srt_name}"
+	srt_generic_filename = f"{name}.srt"
 
 	proceed = False
 	if os.path.isfile(srt_filename):
@@ -120,6 +121,7 @@ def write_result(customPath: str = os.path.dirname(flag_filename or "./"), wordO
 		print(f"\t--> {srt_filename}")
 		srt_writer = get_writer("srt")
 		srt_writer(result, srt_filename, wordOptions)
+		srt_writer(result, srt_generic_filename, wordOptions)
 	return srt_filename
 
 def shutdown():
