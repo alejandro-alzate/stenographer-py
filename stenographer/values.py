@@ -24,6 +24,8 @@ PROMPT_TEMPLATE = """Translate the content between on the code block into the sp
 5. **Only** respond with the text on the code block.
 6. **Apply** the following censorship: {censor}.
 7. Respond **only** on plain text (Do not use a code block as response).
+8. **Do not stop** until the whole text is done.
+9. **Do not** include comments nor notes.
 
 Being unable to follow the rules with lead to a permanent ban.
 
